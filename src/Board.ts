@@ -37,7 +37,7 @@ export default class Board {
       [0, 4, 8],
       [2, 4, 6],
     ];
-    let res: number | null = null;
+    let res: null | number = null;
     winningCombos.forEach((el, i) => {
       if (
         grid[el[0]] !== null &&
