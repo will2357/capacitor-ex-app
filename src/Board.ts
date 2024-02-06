@@ -2,6 +2,7 @@ import { DIMENSIONS, DRAW } from "./constants";
 
 type Grid = Array<null | number>;
 export default class Board {
+  //TODO: Fix type errors from `npm run build` to compile apk
   constructor(grid) {
     this.grid = grid || new Array(DIMENSIONS ** 2).fill(null);
     this.winningIndex = null; // track the index of the winning combination
