@@ -12,6 +12,16 @@ export const GAME_STATES = {
   inProgress: "in_progress",
   over: "over",
 };
+export const SCORES: Record<string, number> = {
+  1: 1,
+  0: 0,
+  2: -1,
+};
+export const GAME_MODES: Record<string, string> = {
+  easy: "easy",
+  medium: "medium",
+  difficult: "difficult",
+};
 
 // Photo Gallery
 export const PHOTO_STORAGE = 'photos';
