@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled,  { StyleSheetManager } from "styled-components";
 import isPropValid from '@emotion/is-prop-valid';
 import {
@@ -9,7 +9,9 @@ import {
   SQUARE_DIMS,
 } from "./constants";
 import { getRandomInt, switchPlayer } from "./utils";
+import Board from "./Board";
 
+const board = new Board();
 const emptyGrid = new Array(DIMENSIONS ** 2).fill(null);
 
 export default function TicTacToe() {
@@ -19,66 +21,130 @@ export default function TicTacToe() {
     ai: null,
   });
   const [gameState, setGameState] = useState(GAME_STATES.notStarted);
+  const [nextMove, setNextMove] = useState<null | number>(null);
+  const [winner, setWinner] = useState<null | string>(null);
 
-  const move = (index: number, player: number | null) => {
-    if (player !== null) {
+  const move = useCallback((index: number, player: number | null) => {
+    if (player && gameState === GAME_STATES.inProgress) {
       setGrid((grid) => {
         const gridCopy = grid.concat();
         gridCopy[index] = player;
         return gridCopy;
       });
-    };
-  };
+    }
+  },
+    [gameState],
+  );
 
-  const aiMove = () => {
+  const aiMove = useCallback(() => {
     let index = getRandomInt(0, 8);
     while (grid[index]) {
       index = getRandomInt(0, 8);
     }
+
     move(index, players.ai);
-  };
+    setNextMove(players.human);
+  },
+    [move, grid, players]
+  );
 
   const humanMove = (index: number) => {
-    if (!grid[index]) {
+    if (!grid[index] && nextMove === players.human) {
       move(index, players.human);
-      aiMove();
+      setNextMove(players.ai);
     }
   };
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (
+      nextMove !== null &&
+      nextMove === players.ai &&
+      gameState !== GAME_STATES.over
+    ) {
+      // Delay AI moves to make them seem more natural
+      timeout = setTimeout(() => {
+        aiMove();
+      }, 500);
+    }
+    return () => timeout && clearTimeout(timeout);
+  }, [nextMove, aiMove, players.ai, gameState]);
+
+  useEffect(() => {
+    const boardWinner = board.getWinner(grid);
+    const declareWinner = (winner: number) => {
+      let winnerStr = "";
+      switch (winner) {
+        case PLAYER_X:
+          winnerStr = "Player X wins!";
+          break;
+        case PLAYER_O:
+          winnerStr = "Player O wins!";
+          break;
+        case DRAW:
+        default:
+          winnerStr = "It's a draw";
+      }
+      setGameState(GAME_STATES.over);
+      setWinner(winnerStr);
+    };
+
+    if (boardWinner !== null && gameState !== GAME_STATES.over) {
+      declareWinner(boardWinner);
+    }
+  }, [gameState, grid, nextMove]);
 
   const choosePlayer = (option: number) => {
     setPlayers({ human: option, ai: switchPlayer(option) });
     setGameState(GAME_STATES.inProgress);
+    // Set the Player X to make the first move
+    setNextMove(PLAYER_X);
   };
 
-  return gameState === GAME_STATES.notStarted ? (
-    <div>
-      <Inner>
-        <p>Choose your player</p>
-        <ButtonRow>
-          {/*
-            *TODO: Move to css
-            */}
-          <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_X)}>X</button>
-          or
-          <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_O)}>O</button>
-        </ButtonRow>
-      </Inner>
-    </div>
-  ) : (
-    <StyleSheetManager shouldForwardProp={shouldForwardProp}>
-      <Container dims={DIMENSIONS}>
-        {grid.map((value, index) => {
-          const isActive = value !== null;
+  const startNewGame = () => {
+    setGameState(GAME_STATES.notStarted);
+    setGrid(emptyGrid);
+  };
 
-          return (
-            <Square key={index} onClick={() => humanMove(index)}>
-              {isActive && <Marker>{value === PLAYER_X ? "X" : "O"}</Marker>}
-            </Square>
-          );
-        })}
-      </Container>
-    </StyleSheetManager>
-  );
+  switch (gameState) {
+    case GAME_STATES.notStarted:
+    default:
+      return (
+        <div>
+          <Inner>
+            <p>Choose your player</p>
+            <ButtonRow>
+              <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_X)}>X</button>
+              or
+              <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_O)}>O</button>
+            </ButtonRow>
+          </Inner>
+        </div>
+      );
+    case GAME_STATES.inProgress:
+      return (
+        <StyleSheetManager shouldForwardProp={shouldForwardProp}>
+          <Container dims={DIMENSIONS}>
+            {grid.map((value, index) => {
+              const isActive = value !== null;
+
+              return (
+                <Square key={index} onClick={() => humanMove(index)}>
+                  {isActive && <Marker>{value === PLAYER_X ? "X" : "O"}</Marker>}
+                </Square>
+              );
+            })}
+          </Container>
+        </StyleSheetManager>
+      );
+    case GAME_STATES.over:
+      return (
+        <div>
+          <p>{winner}</p>
+          <button style={{color: 'white', background: 'black'}} onClick={startNewGame}>Start over</button>
+        </div>
+      );
+  }
 };
 
 const ButtonRow = styled.div`
