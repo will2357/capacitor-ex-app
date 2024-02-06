@@ -4,8 +4,7 @@ import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
-
-const PHOTO_STORAGE = 'photos';
+import { PHOTO_STORAGE } from '../constants'
 
 export function usePhotoGallery() {
   const savePicture = async (photo: Photo, fileName: string): Promise<UserPhoto> => {
