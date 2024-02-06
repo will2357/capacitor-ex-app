@@ -13,6 +13,8 @@ import {
 import { getRandomInt, switchPlayer } from "./utils";
 import Board from "./Board";
 import { minimax } from "./minimax";
+import { ResultModal } from "./ResultModal";
+import { border } from "./styles"
 
 const board = new Board();
 const emptyGrid = new Array(DIMENSIONS ** 2).fill(null);
@@ -27,6 +29,7 @@ export default function TicTacToe() {
   const [nextMove, setNextMove] = useState<null | number>(null);
   const [winner, setWinner] = useState<null | string>(null);
   const [mode, setMode] = useState(GAME_MODES.medium);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const move = useCallback((index: number, player: number | null) => {
     if (player && gameState === GAME_STATES.inProgress) {
@@ -103,8 +106,9 @@ export default function TicTacToe() {
 
   useEffect(() => {
     const boardWinner = board.getWinner(grid);
+
     const declareWinner = (winner: number) => {
-      let winnerStr = "";
+      let winnerStr;
       switch (winner) {
         case PLAYER_X:
           winnerStr = "Player X wins!";
@@ -118,6 +122,8 @@ export default function TicTacToe() {
       }
       setGameState(GAME_STATES.over);
       setWinner(winnerStr);
+      // Slight delay for the modal so there is some time to see the last move
+      setTimeout(() => setModalOpen(true), 300);
     };
 
     if (boardWinner !== null && gameState !== GAME_STATES.over) {
@@ -135,61 +141,75 @@ export default function TicTacToe() {
   const startNewGame = () => {
     setGameState(GAME_STATES.notStarted);
     setGrid(emptyGrid);
+    setModalOpen(false); // Close the modal when the new game starts
   };
 
-  switch (gameState) {
-    case GAME_STATES.notStarted:
-    default:
-      return (
-        <div>
-          <Inner>
-            <p>Select difficulty</p>
-            <select onChange={changeMode} value={mode}>
-              {Object.keys(GAME_MODES).map((key) => {
-                const gameMode = GAME_MODES[key];
-                return (
-                  <option style={{color: 'white', background: 'black'}} key={gameMode} value={gameMode}>
-                    {key}
-                  </option>
-                );
-              })}
-            </select>
-          </Inner>
-          <Inner>
-            <p>Choose your player</p>
-            <ButtonRow>
-              <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_X)}>X</button>
-              or
-              <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_O)}>O</button>
-            </ButtonRow>
-          </Inner>
-        </div>
-      );
-    case GAME_STATES.inProgress:
-      return (
-        <StyleSheetManager shouldForwardProp={shouldForwardProp}>
-          <Container dims={DIMENSIONS}>
-            {grid.map((value, index) => {
-              const isActive = value !== null;
+  return gameState === GAME_STATES.notStarted ? (
+    <div>
+      <Inner>
+        <p>Select difficulty</p>
+        <select onChange={changeMode} value={mode}>
+          {Object.keys(GAME_MODES).map((key) => {
+            const gameMode = GAME_MODES[key];
+            return (
+              <option style={{color: 'white', background: 'black'}} key={gameMode} value={gameMode}>
+                {key}
+              </option>
+            );
+          })}
+        </select>
+      </Inner>
+      <Inner>
+        <p>Choose your player</p>
+        <ButtonRow>
+          {/*
+            *TODO: Replace white with greys? #41403e and move to styles.ts
+            */}
+          <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_X)}>X</button>
+          or
+          <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_O)}>O</button>
+        </ButtonRow>
+      </Inner>
+    </div>
+  ) : (
+    <StyleSheetManager shouldForwardProp={shouldForwardProp}>
+      <Container dims={DIMENSIONS}>
+        {grid.map((value, index) => {
+          const isActive = value !== null;
 
-              return (
-                <Square key={index} onClick={() => humanMove(index)}>
-                  {isActive && <Marker>{value === PLAYER_X ? "X" : "O"}</Marker>}
-                </Square>
-              );
-            })}
-          </Container>
-        </StyleSheetManager>
-      );
-    case GAME_STATES.over:
-      return (
-        <div>
-          <p>{winner}</p>
-          <button style={{color: 'white', background: 'black'}} onClick={startNewGame}>Start over</button>
-        </div>
-      );
-  }
+          return (
+            <Square
+              data-testid={`square_${index}`}
+              key={index}
+              onClick={() => humanMove(index)}
+            >
+              {isActive && <Marker>{value === PLAYER_X ? "X" : "O"}</Marker>}
+            </Square>
+          );
+        })}
+        <Strikethrough
+          styles={
+            gameState === GAME_STATES.over ? board.getStrikethroughStyles() : ""
+          }
+        />
+        <ResultModal
+          isOpen={modalOpen}
+          winner={winner}
+          close={() => setModalOpen(false)}
+          startNewGame={startNewGame}
+        />
+      </Container>
+    </StyleSheetManager>
+  );
 };
+
+const Strikethrough = styled.div<{ styles: string | null }>`
+  position: absolute;
+  ${({ styles }) => styles}
+  background-color: indianred;
+  height: 5px;
+  width: ${({ styles }) => !styles && "0px"};
+`;
 
 const ButtonRow = styled.div`
   display: flex;
@@ -218,7 +238,7 @@ const Square = styled.div`
   align-items: center;
   width: ${SQUARE_DIMS}px;
   height: ${SQUARE_DIMS}px;
-  border: 1px solid white;
+  ${border}; // Adding new border styles
 
   &:hover {
     cursor: pointer;
