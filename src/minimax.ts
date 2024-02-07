@@ -1,5 +1,6 @@
 import { SCORES } from "./constants";
 import { switchPlayer } from "./utils";
+import Board from "./Board";
 
 export const minimax = (
   board: Board,

@@ -250,7 +250,7 @@ const Marker = styled.p`
 `;
 
 // This implements the default behavior from styled-components v5
-function shouldForwardProp(propName, target) {
+function shouldForwardProp(propName: any, target: any) {
     if (typeof target === "string") {
         // For HTML elements, forward the prop if it is a valid HTML attribute
         return isPropValid(propName);
