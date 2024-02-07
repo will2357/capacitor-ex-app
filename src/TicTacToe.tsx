@@ -217,12 +217,12 @@ const ButtonRow = styled.div`
   display: flex;
   width: 150px;
   justify-content: space-between;
-  color: #41403e;
+  color: white;
 `;
 
 const Button = styled.button`
   background: transparent;
-  color: #41403e;
+  color: white;
 `;
 
 const Inner = styled.div`
@@ -230,7 +230,7 @@ const Inner = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 30px;
-  color: #41403e;
+  color: white;
 `;
 
 const Container = styled.div<{ dims: number }>`
