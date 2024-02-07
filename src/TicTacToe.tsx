@@ -152,9 +152,9 @@ export default function TicTacToe() {
           {Object.keys(GAME_MODES).map((key) => {
             const gameMode = GAME_MODES[key];
             return (
-              <option style={{color: 'white', background: 'black'}} key={gameMode} value={gameMode}>
+              <Option key={gameMode} value={gameMode}>
                 {key}
-              </option>
+              </Option>
             );
           })}
         </select>
@@ -162,12 +162,9 @@ export default function TicTacToe() {
       <Inner>
         <p>Choose your player</p>
         <ButtonRow>
-          {/*
-            *TODO: Replace white with greys? #41403e and move to styles.ts
-            */}
-          <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_X)}>X</button>
+          <Button onClick={() => choosePlayer(PLAYER_X)}>X</Button>
           or
-          <button style={{color: 'white', background: 'black'}} onClick={() => choosePlayer(PLAYER_O)}>O</button>
+          <Button onClick={() => choosePlayer(PLAYER_O)}>O</Button>
         </ButtonRow>
       </Inner>
     </div>
@@ -211,10 +208,21 @@ const Strikethrough = styled.div<{ styles: string | null }>`
   width: ${({ styles }) => !styles && "0px"};
 `;
 
+const Option = styled.option`
+  background: transparent;
+  color: #41403e;
+`;
+
 const ButtonRow = styled.div`
   display: flex;
   width: 150px;
   justify-content: space-between;
+  color: #41403e;
+`;
+
+const Button = styled.button`
+  background: transparent;
+  color: #41403e;
 `;
 
 const Inner = styled.div`
@@ -222,6 +230,7 @@ const Inner = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 30px;
+  color: #41403e;
 `;
 
 const Container = styled.div<{ dims: number }>`
